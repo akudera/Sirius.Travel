@@ -1,0 +1,22 @@
+:root {
+  --color-text: #000000;
+  --color-primary: #189ea0;
+  --color-star: #f6b953;
+  --color-background-light: #f8f8f8;
+  --color-background-card: #ffffff;
+  --color-border: #e0e0e0;
+  --color-button-hover: #127a7c;
+  --color-shadow: #0000001a;
+  --color-red: #f11b1b;
+  --color-button-not-allowed: #d4d4d4;
+  --color-button-not-allowed-hover: #bebebe;
+  --color-static-gray: #7a7a7a;
+
+  --border-radius: 8px;
+  --border: 1px solid var(--color-border);
+  --border-primary: 1px solid var(--color-primary);
+  --border-error: 1px solid var(--color-red);
+
+  --transition-duration: 0.15s;
+  --transition-duration-long: 0.25s;
+}
