@@ -3,3 +3,7 @@ body {
   background-color: var(--color-background-light);
   color: var(--color-text);
 }
+
+.is-locked {
+  overflow: hidden;
+}

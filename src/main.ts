@@ -4,12 +4,12 @@ import "./styles/main.scss";
 import { createPinia } from "pinia";
 import router from "./router";
 
-import clickOutside from "./directives/clickOutside";
+import clickOutsideDirective from "./directives/clickOutside";
 
 const app = createApp(App);
 const pinia = createPinia();
 
-app.directive("click-outside", clickOutside);
+app.directive("click-outside", clickOutsideDirective);
 app.use(pinia);
 app.use(router);
 app.mount("#app");

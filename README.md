@@ -8,6 +8,10 @@
 
 This project was developed for a competition and demonstrates the skills of creating a fully functional web application within a tight deadline.
 
+## 🖼️ Preview
+
+![Preview](https://github.com/akudera/Sirius.Travel/blob/main/Preview-mini.png?raw=true)
+
 ## Functional Capabilities
 
 ### Place Viewing: 📍
@@ -68,6 +72,8 @@ The project was developed within **3 days**.
 
 ## ✅ Result
 
-The application is deployed at: https://v408241.hosted-by-vdsina.com/
+The application is deployed at:
 
-*The link may not be working if it has been a long time since **14-07-2025***
+https://v408241.hosted-by-vdsina.com/
+
+https://siriquest.vercel.app/

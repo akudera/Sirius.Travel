@@ -69,30 +69,36 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, watch, onUnmounted } from "vue";
+import type { PropType } from "vue";
 
 const props = defineProps({
   modelValue: {
-    type: Array,
+    type: Array as PropType<Blob[]>,
     default: () => [],
   },
 });
+
 const emit = defineEmits(["update:modelValue"]);
 
 const MAX_FILES = 4;
 const MAX_TOTAL_SIZE_MB = 5;
 const MAX_TOTAL_SIZE_BYTES = MAX_TOTAL_SIZE_MB * 1024 * 1024;
 
-const fileInput = ref(null);
-const imageUrls = ref([]);
+const fileInput = ref<HTMLInputElement | null>();
+type URLStrings = string[];
+const imageUrls = ref<URLStrings>([]);
 const errorMessage = ref("");
 
 const canAddMoreFiles = computed(() => props.modelValue.length < MAX_FILES);
 
-function handleFileChange(event) {
+function handleFileChange(event: Event): void {
+  if (!fileInput.value) return;
   errorMessage.value = "";
-  const selectedFiles = Array.from(event.target?.files);
+  const selectedFiles = Array.from(
+    (event.target as HTMLInputElement)?.files || [],
+  );
   const currentFiles = props.modelValue;
 
   if (currentFiles.length + selectedFiles.length > MAX_FILES) {
@@ -121,7 +127,7 @@ function handleFileChange(event) {
   fileInput.value.value = "";
 }
 
-function removeImage(index) {
+function removeImage(index: number): void {
   const updatedFiles = [...props.modelValue];
   updatedFiles.splice(index, 1);
   emit("update:modelValue", updatedFiles);

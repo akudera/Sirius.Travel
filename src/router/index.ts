@@ -12,7 +12,7 @@ const routes = [
     component: () => import("../views/PlaceDetails.vue"),
     props: true,
   },
-];
+] as const;
 
 const router = createRouter({
   history: createWebHistory(),

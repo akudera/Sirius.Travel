@@ -1,19 +1,37 @@
-import js from "@eslint/js";
-import globals from "globals";
-import pluginVue from "eslint-plugin-vue";
 import { defineConfig } from "eslint/config";
-import eslintConfigPrettier from "eslint-config-prettier";
+import js from "@eslint/js";
+import tseslint from "typescript-eslint";
+import vue from "eslint-plugin-vue";
+import prettier from "eslint-config-prettier";
+import globals from "globals";
 
-export default defineConfig([
+export default defineConfig(
   {
-    files: ["**/*.{js,mjs,cjs,vue}"],
-    plugins: { js },
-    extends: ["js/recommended"],
+    ignores: ["dist", "node_modules", "*.d.ts"],
   },
+
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
+  ...vue.configs["flat/recommended"],
+  prettier,
+
   {
-    files: ["**/*.{js,mjs,cjs,vue}"],
-    languageOptions: { globals: globals.browser },
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+      },
+      parserOptions: {
+        parser: tseslint.parser,
+      },
+    },
+
+    rules: {
+      "prefer-const": "error",
+
+      "vue/multi-word-component-names": "off",
+      "vue/no-v-html": "off",
+      "vue/component-api-style": ["error", ["script-setup", "composition"]],
+      "vue/component-name-in-template-casing": ["error", "PascalCase"],
+    },
   },
-  pluginVue.configs["flat/essential"],
-  eslintConfigPrettier,
-]);
+);

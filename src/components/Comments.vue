@@ -1,19 +1,17 @@
 <template>
   <section class="comments">
     <h3 class="comments__title">Оставить отзыв</h3>
-    <form @submit.prevent="submitComment" class="comments__form" novalidate>
+    <form class="comments__form" novalidate @submit.prevent="submitComment">
       <div class="form-group">
-        <label for="rating" class="visually-hidden"
-          >Укажите оценку (от 1 до 5)</label
-        >
+        <label for="rating" class="visually-hidden">Укажите оценку (от 1 до 5)</label>
         <input
-          type="number"
           id="rating"
           ref="ratingInput"
+          v-model.number="newComment.rating"
+          type="number"
           min="1"
           max="5"
           title="Оценка должна быть от 1 до 5."
-          v-model.number="newComment.rating"
           class="comments__form-input"
           :class="{ invalid: !isValid.rating && isTouched.rating }"
           @blur="markAsTouched('rating')"
@@ -28,9 +26,9 @@
         <textarea
           id="review"
           ref="descriptionInput"
+          v-model.trim="newComment.description"
           placeholder="Напишите свой отзыв..."
           title="Отзыв должен содержать не менее 5 символов."
-          v-model.trim="newComment.description"
           class="comments__form-input comments__form-textarea"
           :class="{
             invalid: !isValid.description && isTouched.description,
@@ -38,10 +36,7 @@
           @blur="markAsTouched('description')"
           @input="validateDescription"
         ></textarea>
-        <span
-          v-if="!isValid.description && isTouched.description"
-          class="error-message"
-        >
+        <span v-if="!isValid.description && isTouched.description" class="error-message">
           Отзыв не может быть пустым и должен содержать не менее 5 символов.
         </span>
       </div>
@@ -58,8 +53,8 @@
     </form>
 
     <h3 class="comments__title">Отзывы ({{ reviews ? reviews.length : 0 }})</h3>
-    <div class="comments__list" v-if="reviews && reviews.length">
-      <div class="comments__item" v-for="review in reviews" :key="review.id">
+    <div v-if="reviews && reviews.length" class="comments__list">
+      <div v-for="review in reviews" :key="review.id" class="comments__item">
         <div class="comments__rating">
           {{ review.rating }}
           <svg class="star-icon" viewBox="0 0 24 24">
@@ -75,33 +70,29 @@
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, nextTick } from "vue";
 
 import { usePlacesStore } from "../stores/placesStore";
+import type { IReview } from "../interfaces";
+import { AxiosError } from "axios";
 const placesStore = usePlacesStore();
 
-const props = defineProps({
-  id: {
-    type: String,
-    required: true,
-  },
-  reviews: {
-    type: Object,
-    required: true,
-  },
-  fetchPlaceDetails: Function,
-});
+const props = defineProps<{
+  id: string;
+  reviews: IReview[];
+  fetchPlaceDetails: (placeId: string) => Promise<void>;
+}>();
 
-const ratingInput = ref();
-const descriptionInput = ref();
+const ratingInput = ref<HTMLInputElement | null>();
+const descriptionInput = ref<HTMLInputElement | null>();
 
 const isSubmittingComment = ref(false);
-const commentError = ref(null);
+const commentError = ref("");
 
 const newComment = ref({
   rating: 5,
-  commentText: "",
+  description: "",
 });
 
 const isTouched = ref({
@@ -109,7 +100,8 @@ const isTouched = ref({
   description: false,
 });
 
-function markAsTouched(fieldName) {
+type TIsTouched = "rating" | "description";
+function markAsTouched(fieldName: TIsTouched) {
   isTouched.value[fieldName] = true;
 }
 
@@ -118,62 +110,64 @@ const isValid = ref({
   description: false,
 });
 
-function validateRating() {
-  isValid.value.rating =
-    newComment.value.rating >= 1 && newComment.value.rating <= 5;
+function validateRating(): void {
+  isValid.value.rating = newComment.value.rating >= 1 && newComment.value.rating <= 5;
 }
 
-function validateDescription() {
-  isValid.value.description = newComment.value.description?.length >= 5;
+function validateDescription(): void {
+  isValid.value.description = newComment.value.description.length >= 5;
 }
 
-const isFormValid = computed(() => {
-  return isValid.value.rating && isValid.value.description;
-});
+const isFormValid = computed(() => isValid.value.rating && isValid.value.description);
 
-function submitComment() {
-  markAsTouched("rating");
-  markAsTouched("description");
+async function submitComment() {
+  Object.keys(isValid.value).forEach((field) => {
+    markAsTouched(field as TIsTouched);
+  });
 
   validateRating();
   validateDescription();
 
   if (isFormValid.value) {
-    nextTick(async () => {
-      isSubmittingComment.value = true;
-      try {
-        await placesStore.addComment(
-          props.id,
-          newComment.value.rating,
-          newComment.value.description,
-        );
+    await nextTick();
 
-        newComment.value.rating = 5;
-        newComment.value.description = "";
-        isTouched.value = {
-          rating: false,
-          description: false,
-        };
+    isSubmittingComment.value = true;
+    try {
+      await placesStore.addComment(props.id, newComment.value.rating, newComment.value.description);
 
-        await props.fetchPlaceDetails(props.id);
-      } catch (err) {
-        console.error("Ошибка при отправке комментария:", err);
-        commentError.value =
-          "Не удалось отправить отзыв. Попробуйте еще раз. " +
-          (err.response?.data?.message || err.message || "");
-      } finally {
-        isSubmittingComment.value = false;
-      }
-    });
-  } else {
-    nextTick(() => {
-      [ratingInput.value, descriptionInput.value].some((element) => {
-        if (element.classList.contains("invalid")) {
-          element.focus();
-          return true;
+      newComment.value.rating = 5;
+      newComment.value.description = "";
+      isTouched.value = {
+        rating: false,
+        description: false,
+      };
+
+      await props.fetchPlaceDetails(props.id);
+    } catch (err: unknown) {
+      if (err instanceof AxiosError) {
+        if (err.response) {
+          if (err.status === 403) {
+            commentError.value = "Функция для добавления комментариев отключена";
+          } else {
+            commentError.value += `${err.response?.data?.message || err.message || ""}`;
+          }
+        } else if (err.request) {
+          commentError.value = "Ошибка, нет ответа от сервера, попробуйте еще раз";
+        } else {
+          commentError.value = "Что-то пошло не так :(";
         }
-      });
-    });
+      } else {
+        commentError.value = "Не удалось отправить отзыв. Попробуйте еще раз позже";
+      }
+      console.error("Ошибка при отправке комментария:", err);
+    } finally {
+      isSubmittingComment.value = false;
+    }
+  } else {
+    const firstInvalid = [ratingInput.value, descriptionInput.value].find((element) =>
+      element?.classList.contains("invalid")
+    );
+    firstInvalid?.focus();
   }
 }
 </script>

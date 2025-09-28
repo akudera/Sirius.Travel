@@ -1,21 +1,24 @@
 <template>
   <header class="header container">
     <h1 class="header__title">Сириус.Путеводитель</h1>
-    <button
-      class="header__add-button"
-      ref="addPlaceButton"
-      @click="modalStore.openMenu()"
-    >
+    <button ref="addPlaceButton" class="header__add-button" @click="openModal">
       Добавить новое место
     </button>
-    <Modal :open-button="addPlaceButton" v-if="addPlaceButton" />
+    <Modal
+      v-if="addPlaceButton"
+      :open-button="addPlaceButton"
+      :is-open="isOpen"
+      @close="closeModal"
+    >
+      <AddPlaceModal @close="closeModal" />
+    </Modal>
     <hr />
   </header>
 
   <div class="filters container">
     <div class="filters__filter-group">
       <label for="category" class="label">Фильтр по категории:</label>
-      <select id="category" class="filters__select" v-model="category">
+      <select id="category" v-model="category" class="filters__select">
         <option value="">Все категории</option>
         <option value="cafe">Кафе и рестораны</option>
         <option value="park">Парки и зоны отдыха</option>
@@ -30,7 +33,7 @@
 
     <div class="filters__filter-group">
       <label for="rating" class="label">Фильтр по оценке:</label>
-      <select id="rating" class="filters__select" v-model="rating">
+      <select id="rating" v-model="rating" class="filters__select">
         <option value="">Нет</option>
         <option value="fromMore">От большей к меньшей</option>
         <option value="fromLess">От меньшей к большей</option>
@@ -39,64 +42,64 @@
   </div>
 
   <main class="main container">
-    <div class="main__loader" v-if="isLoading">
+    <div v-if="isLoading" class="main__loader">
       <Loader />
     </div>
     <template v-else>
       <div v-if="error" class="error">
-        {{ `Не удалось загрузить: ${error.message}` }}
+        {{ `Не удалось загрузить: ${error}` }}
       </div>
-      <RouterLink
-        class="place-card"
-        v-for="place in placesStore.places"
-        :key="place.id"
-        :to="{ name: 'PlaceDetails', params: { id: place.id } }"
-      >
-        <h2 class="place-card__title">{{ place.name }}</h2>
-        <address class="place-card__address">
-          {{ place.address }}
-        </address>
-        <div class="place-card__rating-wrapper">
-          <svg class="star-icon" viewBox="0 0 24 24">
-            <path
-              d="M12 2l3.09 6.32L22 9.27l-5 4.87 1.18 6.88L12 17.27l-6.18 3.23L7 14.14l-5-4.87l6.91-1.25L12 2z"
-            />
-          </svg>
-          <span class="place-card__rating">{{
-            place["average_rating"] === 0
-              ? "Нет отзывов"
-              : place["average_rating"]
-          }}</span>
-        </div>
-      </RouterLink>
+      <template v-else>
+        <RouterLink
+          v-for="place in placesStore.places"
+          :key="place.id"
+          class="place-card"
+          :to="{ name: 'PlaceDetails', params: { id: place.id } }"
+        >
+          <h2 class="place-card__title">{{ place.name }}</h2>
+          <address class="place-card__address">
+            {{ place.address }}
+          </address>
+          <div class="place-card__rating-wrapper">
+            <svg class="star-icon" viewBox="0 0 24 24">
+              <path
+                d="M12 2l3.09 6.32L22 9.27l-5 4.87 1.18 6.88L12 17.27l-6.18 3.23L7 14.14l-5-4.87l6.91-1.25L12 2z"
+              />
+            </svg>
+            <span class="place-card__rating">{{
+              place["average_rating"] || "Нет отзывов"
+            }}</span>
+          </div>
+        </RouterLink>
+      </template>
     </template>
   </main>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, watchEffect } from "vue";
 
 import { usePlacesStore } from "../stores/placesStore";
 const placesStore = usePlacesStore();
 
-import { useModalStore } from "../stores/modalStore";
-const modalStore = useModalStore();
-
 import Loader from "../components/Loader.vue";
 import Modal from "../components/Modal.vue";
+import AddPlaceModal from "../components/AddPlaceModal.vue";
+import type { TCategory } from "../types";
 
-const addPlaceButton = ref();
+const addPlaceButton = ref<HTMLButtonElement>();
 
-const category = ref("");
-const rating = ref("");
+const category = ref<TCategory | "">("");
+type TRating = "fromMore" | "fromLess";
+const rating = ref<TRating | "">("");
 
-const error = ref("");
+const error = ref<string>("");
 const isLoading = ref(false);
 
 watchEffect(async () => {
   try {
     isLoading.value = true;
-    error.value = null;
+    error.value = "";
 
     const params = new URLSearchParams();
     if (category.value) {
@@ -106,15 +109,26 @@ watchEffect(async () => {
       params.append("sort_by_rating", rating.value);
     }
 
-    console.log(params.toString());
     await placesStore.getPlaces(params.toString());
-  } catch (err) {
-    error.value = err;
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      error.value = err.message;
+    } else {
+      error.value = "Произошла неизвестная ошибка";
+    }
     console.error(err);
   } finally {
     isLoading.value = false;
   }
 });
+
+const isOpen = ref(false);
+function openModal() {
+  isOpen.value = true;
+}
+function closeModal() {
+  isOpen.value = false;
+}
 </script>
 
 <style lang="scss" scoped>

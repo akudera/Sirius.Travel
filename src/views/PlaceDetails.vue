@@ -4,11 +4,11 @@
   </div>
 
   <div v-else-if="error" class="place-details__error">
-    Произошла ошибка при загрузке места: {{ error.message || error }}
+    Произошла ошибка при загрузке места: {{ error }}
   </div>
 
   <div v-else-if="place" class="place-details container">
-    <button @click="goBack" class="back-button">
+    <button class="back-button" @click="goBack">
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path
           d="M15 18L9 12L15 6"
@@ -29,25 +29,21 @@
           />
         </svg>
         <span class="place-details__rating">
-          {{
-            place["average_rating"] === 0
-              ? "Нет отзывов"
-              : place["average_rating"]
-          }}
+          {{ place["average_rating"] || "Нет отзывов" }}
         </span>
       </div>
     </header>
     <address class="place-details__address">{{ place.address }}</address>
     <div
-      class="place-details__images"
       v-if="place.images && place.images.length"
+      class="place-details__images"
     >
       <h3>Изображения:</h3>
       <ul class="images-list">
         <li
-          class="images-item"
           v-for="(url, index) in place.images"
           :key="index"
+          class="images-item"
         >
           <img :src="url" alt="Изображение места" height="250" loading="lazy" />
         </li>
@@ -78,12 +74,12 @@
     <Comments
       :id="id"
       :reviews="place.reviews"
-      :fetchPlaceDetails="fetchPlaceDetails"
+      :fetch-place-details="fetchPlaceDetails"
     />
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, watch } from "vue";
 
 import { useRouter } from "vue-router";
@@ -94,28 +90,30 @@ const placesStore = usePlacesStore();
 
 import Loader from "../components/Loader.vue";
 import Comments from "../components/Comments.vue";
+import type { IPlace } from "../interfaces";
 
-const props = defineProps({
-  id: {
-    type: String,
-    required: true,
-  },
-});
+const props = defineProps<{
+  id: string;
+}>();
 
-const place = ref(null);
+const place = ref<IPlace | null>();
 const loading = ref(true);
-const error = ref(null);
+const error = ref("");
 
-async function fetchPlaceDetails(placeId) {
+async function fetchPlaceDetails(placeId: string) {
   loading.value = true;
-  error.value = null;
+  error.value = "";
   place.value = null;
 
   try {
     place.value = await placesStore.getPlaceById(placeId);
-  } catch (err) {
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      error.value = err.message;
+    } else {
+      error.value = "Неизвестная ошибка при загрузки места";
+    }
     console.error("Ошибка загрузки места:", err);
-    error.value = err;
   } finally {
     loading.value = false;
   }
@@ -134,9 +132,9 @@ watch(
   },
 );
 
-const goBack = () => {
+function goBack() {
   router.back();
-};
+}
 </script>
 
 <style lang="scss" scoped>
