@@ -8,7 +8,7 @@
 
 This project was developed for a competition and demonstrates the skills of creating a fully functional web application within a tight deadline.
 
-## 🖼️ Preview
+## 🖼️ Mini preview
 
 ![Preview](https://github.com/akudera/Sirius.Travel/blob/main/Preview-mini.png?raw=true)
 
@@ -58,13 +58,15 @@ The project was developed within **3 days**.
 
 ### Frontend:
 
-- **Framework:** Vue 3
+- **Language:** JavaScript
+
+- **Framework:** Vue 3 (Composition API)
 
 - **Bundler:** Vite
 
 - **Router:** Vue Router
 
-- **State Manager:** Pinia
+- **State Manager:** Pinia (Options API)
 
 - **HTTP Client:** Axios
 
@@ -76,4 +78,4 @@ The application is deployed at:
 
 https://v408241.hosted-by-vdsina.com/
 
-https://siriquest.vercel.app/
+https://archive-siriquest.vercel.app/
