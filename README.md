@@ -10,7 +10,7 @@ This project was developed for a competition and demonstrates the skills of crea
 
 ## 🖼️ Mini preview
 
-![Preview](https://github.com/akudera/Sirius.Travel/blob/main/Preview-mini.png?raw=true)
+![Preview](https://github.com/akudera/Sirius.Travel/blob/archive-contest/Preview-mini.png?raw=true)
 
 ## Functional Capabilities
 
